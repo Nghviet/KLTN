@@ -21,16 +21,12 @@ public class MainApplication {
 		try {
 			JWT.jwtInit();
 		} catch (Exception ex) {
+			System.out.println("JWT Failed, waiting");
 			ex.printStackTrace();
 			LoginSignal.getInstance().doWait();
-			try {
-				JWT.jwtInit();
-			} catch(Exception e) {
-				e.printStackTrace();
-				return;
-			}
 		}
-
+		System.out.println("System start");
+		System.out.println(JWT.isAvailable());
 		ScheduledThreadPoolExecutor threadPool = new ScheduledThreadPoolExecutor(4);
 		SecurityHandler.getInstance();
 		MqttHandler.getInstance();

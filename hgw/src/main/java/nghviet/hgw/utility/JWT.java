@@ -21,15 +21,13 @@ public class JWT {
                 HttpHandler.getInstance().setJwtToken(jwt);
             } catch (Exception ex) {
                 ex.printStackTrace();
-                JWT.register("ann101","ann101");
-                throw new IOException("File not found");
+                throw ex;
             }
-        } else {
-            JWT.register("ann101","ann101");
-        };
+        } 
+        throw new IOException("File not found");
     }
 
-    public static int register(String username, String password) throws IOException {
+    public static int register(String username, String password, boolean export) throws IOException {
         try {
             File file = new File(jwt_file);
             byte[] macAddress = new byte[0];
@@ -62,19 +60,24 @@ public class JWT {
                 return 1;
             }
             jwt = response.get(0);
-            System.out.println(jwt);
 
-            file.createNewFile();
-            FileWriter writer = new FileWriter(file);
-            writer.write(jwt);
-            writer.flush();
+            if(export) {
+                file.createNewFile();
+                FileWriter writer = new FileWriter(file);
+                writer.write(jwt);
+                writer.flush();
 
-            HttpHandler.getInstance().setJwtToken(jwt);
-
+                HttpHandler.getInstance().setJwtToken(jwt);
+            }
             return 0;
         } catch (Exception e) {
             e.printStackTrace();
             return 1;
         }
+    }
+
+    public static boolean isAvailable() {
+        if(jwt.length() == 0) return false;
+        return true;
     }
 }
