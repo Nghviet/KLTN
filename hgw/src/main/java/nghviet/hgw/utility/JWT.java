@@ -14,7 +14,7 @@ public class JWT {
     private static String jwt = "";
     public static void jwtInit() throws IOException {
         File file = new File(jwt_file);
-        if (file.exists()) {
+        if (file.canRead()) {
             try {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
                 jwt = reader.readLine();
@@ -24,7 +24,7 @@ public class JWT {
                 throw ex;
             }
         } 
-        throw new IOException("File not found");
+        else throw new IOException("File not found");
     }
 
     public static int register(String username, String password, boolean export) throws IOException {
@@ -35,7 +35,7 @@ public class JWT {
             while(networkInterfaces.hasMoreElements()) {
                 NetworkInterface inf = networkInterfaces.nextElement();
                 byte[] mac = inf.getHardwareAddress();
-                if(mac != null && !inf.getDisplayName().contains("Virtual")) {
+                if(mac != null && !inf.getDisplayName().contains("Virtual") && (inf.getDisplayName().contains("wlan") || inf.getDisplayName().contains("Ethernet"))) {
                     System.out.println(inf);
                     macAddress = mac;
                     break;
@@ -48,7 +48,7 @@ public class JWT {
             for (int i = 0; i < macAddress.length; i++)
                 hexadecimalFormat[i] = String.format("%02X", macAddress[i]);
             String MAC = String.join("-", hexadecimalFormat);
-
+            System.out.println(MAC);
             HashMap<String, String> body = new HashMap<>();
             String put = body.put("username", username);
             body.put("password", password);

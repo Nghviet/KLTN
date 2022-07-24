@@ -20,7 +20,7 @@ public class IlluminanceProcess extends AbstractProcess<IlluminanceSensor> {
             @Override
             public void run() {
                 if(pending.size() != 0) {
-                    LoggerHandler.getInstance().info(pending.size() + "/" + devices.size() + " illuminance loss");
+//                    LoggerHandler.getInstance().info(pending.size() + "/" + devices.size() + " illuminance loss");
                     pending.clear();
                 }
 
@@ -28,7 +28,7 @@ public class IlluminanceProcess extends AbstractProcess<IlluminanceSensor> {
                 changed.clear();
                 for(IlluminanceSensor sensor : devices) {
                     try {
-                        EchoFrame frame = sensor.get().reqGetOperationStatus().reqGetMeasuredIlluminanceValue1().send();
+                        EchoFrame frame = sensor.get().reqGetMeasuredIlluminanceValue1().send();
                         pending.add(new Package(sensor, frame));
                     } catch(Exception ex) {
                         ex.printStackTrace();
@@ -58,7 +58,7 @@ public class IlluminanceProcess extends AbstractProcess<IlluminanceSensor> {
 
                 String previousValue = storage.get(ipAddress, instanceCode, epc);
                 if(!previousValue.equals(currentValue)) {
-                    changedValue(ipAddress, instanceCode, epc);
+//                    changedValue(ipAddress, instanceCode, epc);
 //                    System.out.println(previousValue  + " " + currentValue);
                     storage.put(eoj.getNode().getAddressStr(), Byte.toString(eoj.getInstanceCode()),epc,currentValue);
                 }
@@ -77,9 +77,10 @@ public class IlluminanceProcess extends AbstractProcess<IlluminanceSensor> {
                 String previousValue = storage.get(ipAddress, instanceCode, epc);
                 if(previousValue == null || previousValue.equals("")) previousValue = "0";
                 String currentValue = Processing.convertShort(property.edt);
+                if(!previousValue.equals(currentValue)) {
                     changedValue(ipAddress, instanceCode, epc);
-//                    System.out.println(previousValue + " " + currentValue);
                     storage.put(eoj.getNode().getAddressStr(), Byte.toString(eoj.getInstanceCode()),epc,currentValue);
+                }
 
 
             }

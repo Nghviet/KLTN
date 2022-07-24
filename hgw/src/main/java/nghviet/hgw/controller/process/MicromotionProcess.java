@@ -18,22 +18,21 @@ public class MicromotionProcess extends AbstractProcess<MicromotionSensor> {
             @Override
             public void run() {
                 if(pending.size() != 0) {
-                    System.out.println(pending.size() + "/" + devices.size() + " illuminance loss");
+//                    tem.out.println(pending.size() + "/" + devices.size() + " illuminance loss");
                     pending.clear();
                 }
-
                 send();
-                storage.clear();
+                changed.clear();
                 for(MicromotionSensor sensor : devices) {
                     try {
-                        EchoFrame frame = sensor.get().reqGetOperationStatus().reqGetMicromotionDetectionStatus().send();
+                        EchoFrame frame = sensor.get().reqGetMicromotionDetectionStatus().send();
                         pending.add(new Package(sensor, frame));
                     } catch(Exception ex) {
                         ex.printStackTrace();
                     }
                 }
             }
-        }, 0,2000, TimeUnit.MILLISECONDS);
+        }, 0,500, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -52,7 +51,7 @@ public class MicromotionProcess extends AbstractProcess<MicromotionSensor> {
                 if(property.edt[0] == (byte) 0x30) currentValue = "ON"; else currentValue = "OFF";
 
                 String previousValue = storage.get(ipAddress, instanceCode, epc);
-                if(!previousValue.equals(currentValue)) changedValue(ipAddress, instanceCode, epc);
+//                if(!previousValue.equals(currentValue)) changedValue(ipAddress, instanceCode, epc);
 
                 storage.put(eoj.getNode().getAddressStr(), Byte.toString(eoj.getInstanceCode()),"OperationStatus",currentValue);
             }
@@ -64,13 +63,20 @@ public class MicromotionProcess extends AbstractProcess<MicromotionSensor> {
                 String ipAddress = eoj.getNode().getAddressStr();
                 String instanceCode = Byte.toString(eoj.getInstanceCode());
                 String epc = "Motion";
-                String currentValue;
-                if(property.edt[0] == (byte) 0x41) currentValue = "ON"; else currentValue = "OFF";
-
+                String currentValue = "";
+                if(property.edt[0] == (byte) 0x41) currentValue = "ON";
+                if(property.edt[0] == (byte) 0x40) currentValue = "OFF";
                 String previousValue = storage.get(ipAddress, instanceCode, epc);
-                if(previousValue == null || previousValue.equals("")) previousValue = "0";
-                if(!previousValue.equals(currentValue)) changedValue(ipAddress, instanceCode,epc);
-                storage.put(eoj.getNode().getAddressStr(), Byte.toString(eoj.getInstanceCode()),epc,currentValue);
+                if(previousValue == null || previousValue.equals("")) previousValue = "";
+                if(!previousValue.equals(currentValue)) {
+                    changedValue(ipAddress, instanceCode,epc);
+                }
+                storage.put(ipAddress, instanceCode,epc,currentValue);
+            }
+
+            @Override
+            protected boolean onInformProperty(EchoObject eoj, short tid, byte esv, EchoProperty property) {
+                return super.onInformProperty(eoj, tid, esv, property);
             }
         });
     }

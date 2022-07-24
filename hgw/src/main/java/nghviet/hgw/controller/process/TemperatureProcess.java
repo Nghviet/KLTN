@@ -21,7 +21,7 @@ public class TemperatureProcess extends AbstractProcess<TemperatureSensor> {
             @Override
             public void run() {
                 if (pending.size() != 0) {
-                    LoggerHandler.getInstance().info(pending.size() + "/" + devices.size() + " temperature loss");
+//                    LoggerHandler.getInstance().info(pending.size() + "/" + devices.size() + " temperature loss");
                     pending.clear();
                 }
 //                else LoggerHandler.getInstance().info(Integer.toString(counter) + " : received " + devices.size());
@@ -29,7 +29,7 @@ public class TemperatureProcess extends AbstractProcess<TemperatureSensor> {
                 changed.clear();
                 for (TemperatureSensor sensor : devices) {
                     try {
-                        EchoFrame frame = sensor.get().reqGetOperationStatus().reqGetMeasuredTemperatureValue().send();
+                        EchoFrame frame = sensor.get().reqGetMeasuredTemperatureValue().send();
                         pending.add(new Package(sensor, frame));
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -61,7 +61,7 @@ public class TemperatureProcess extends AbstractProcess<TemperatureSensor> {
 
                 String previousValue = storage.get(ipAddress, instanceCode, epc);
                 if(!previousValue.equals(currentValue)) {
-                    changedValue(ipAddress, instanceCode, epc);
+//                    changedValue(ipAddress, instanceCode, epc);
                     storage.put(eoj.getNode().getAddressStr(), Byte.toString(eoj.getInstanceCode()),epc,currentValue);
                 }
             }
@@ -78,10 +78,10 @@ public class TemperatureProcess extends AbstractProcess<TemperatureSensor> {
                 if(previousValue == null || previousValue.equals("")) previousValue = "0";
                 String currentValue = Processing.convertShort(property.edt);
 //                currentValue = Short.toString((short) (Short.parseShort(currentValue) / 10));
-
+                if(!previousValue.equals(currentValue)) {
                     changedValue(ipAddress, instanceCode, epc);
                     storage.put(eoj.getNode().getAddressStr(), Byte.toString(eoj.getInstanceCode()),epc,currentValue);
-
+                }
             }
         });
     }

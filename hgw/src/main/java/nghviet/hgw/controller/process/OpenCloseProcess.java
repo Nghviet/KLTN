@@ -21,17 +21,17 @@ public class OpenCloseProcess extends AbstractProcess<OpenCloseSensor> {
                 }
 
                 send();
-                storage.clear();
+                changed.clear();
                 for(OpenCloseSensor sensor : devices) {
                     try {
-                        EchoFrame frame = sensor.get().reqGetOperationStatus().reqGetDegreeOfOpeniNgDetectionStatus1().send();
+                        EchoFrame frame = sensor.get().reqGetDegreeOfOpeniNgDetectionStatus1().send();
                         pending.add(new Package(sensor, frame));
                     } catch(Exception ex) {
                         ex.printStackTrace();
                     }
                 }
             }
-        }, 0,2000, TimeUnit.MILLISECONDS);
+        }, 0,500, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -47,11 +47,12 @@ public class OpenCloseProcess extends AbstractProcess<OpenCloseSensor> {
                 String instanceCode = Byte.toString(eoj.getInstanceCode());
                 String epc = "OperationStatus";
 
-                String currentValue;
-                if(property.edt[0] == (byte) 0x30) currentValue = "ON"; else currentValue = "OFF";
+                String currentValue = "";
+                if(property.edt[0] == (byte) 0x30) currentValue = "ON";
+                if(property.edt[0] == (byte) 0x31) currentValue = "OFF";
 
                 String previousValue = storage.get(ipAddress, instanceCode, epc);
-                if(!previousValue.equals(currentValue)) changedValue(ipAddress, instanceCode, epc);
+//                if(!previousValue.equals(currentValue)) changedValue(ipAddress, instanceCode, epc);
 
                 storage.put(eoj.getNode().getAddressStr(), Byte.toString(eoj.getInstanceCode()),"OperationStatus",currentValue);
             }
@@ -64,11 +65,14 @@ public class OpenCloseProcess extends AbstractProcess<OpenCloseSensor> {
                 String instanceCode = Byte.toString(eoj.getInstanceCode());
                 String epc = "Status";
 
-                String currentValue;
-                if(property.edt[0] == (byte) 0x30) currentValue = "OFF"; else currentValue = "ON";
+                String currentValue = "";
+                if(property.edt[0] == (byte) 0x30) currentValue = "OFF";
+                if(property.edt[0] == (byte) 0x31) currentValue = "ON";
+
+                if(!currentValue.equals("")) System.out.println("DOOR " + currentValue);
 
                 String previousValue = storage.get(ipAddress, instanceCode, epc);
-                if(previousValue == null || previousValue.equals("")) previousValue = "0";
+                if(previousValue == null || previousValue.equals("")) previousValue = "";
                 if(!previousValue.equals(currentValue)) changedValue(ipAddress, instanceCode,epc);
 
                 storage.put(eoj.getNode().getAddressStr(), Byte.toString(eoj.getInstanceCode()),epc,currentValue);

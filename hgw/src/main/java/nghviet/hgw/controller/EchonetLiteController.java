@@ -39,8 +39,9 @@ public class EchonetLiteController {
             while(networkInterfaces.hasMoreElements()) {
                 NetworkInterface inf = networkInterfaces.nextElement();
                 byte[] mac = inf.getHardwareAddress();
-                if(mac != null && !inf.getDisplayName().contains("Virtual")) {
+                if(mac != null && !inf.getDisplayName().contains("Virtual") && (inf.getDisplayName().contains("eth") || inf.getDisplayName().contains("Ethernet"))) {
                     Echo.start(new DefaultNodeProfile(), new DeviceObject[] {new DefaultController()}, inf);
+                    LoggerHandler.getInstance().info("Echonet Lite start  at:" + inf.getDisplayName());
                     break;
                 }
             }
@@ -74,21 +75,21 @@ public class EchonetLiteController {
                 @Override
                 public void onNewMicromotionSensor(MicromotionSensor device) {
                     super.onNewMicromotionSensor(device);
-//                    micromotionProcess.addDevice(device);
+                    micromotionProcess.addDevice(device);
                 }
 
                 @Override
                 public void onNewTemperatureSensor(TemperatureSensor sensor) {
                     super.onNewTemperatureSensor(sensor);
                     LoggerHandler.getInstance().info("On new Temperature Sensor at " + sensor.getNode().getAddressStr());
-//                    temperatureProcess.addDevice(sensor);
+                    temperatureProcess.addDevice(sensor);
                 }
 
                 @Override
                 public void onNewOpenCloseSensor(OpenCloseSensor sensor) {
                     super.onNewOpenCloseSensor(sensor);
                     LoggerHandler.getInstance().info("On new Door Sensor at " + sensor.getNode().getAddressStr());
-//                    doorProcess.addDevice(sensor);
+                    doorProcess.addDevice(sensor);
                 }
             });
 

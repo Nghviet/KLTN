@@ -23,7 +23,7 @@ public class HumidityProcess extends AbstractProcess<HumiditySensor>{
             @Override
             public void run() {
                 if (pending.size() != 0) {
-                    LoggerHandler.getInstance().info(Integer.toString(counter) + " : " + pending.size() + "/" + devices.size() + " humidity loss");
+//                    LoggerHandler.getInstance().info(Integer.toString(counter) + " : " + pending.size() + "/" + devices.size() + " humidity loss");
                     pending.clear();
                 }
 //                else LoggerHandler.getInstance().info(Integer.toString(counter) + " : received " + devices.size());
@@ -32,7 +32,7 @@ public class HumidityProcess extends AbstractProcess<HumiditySensor>{
                 counter++;
                 for (HumiditySensor sensor : devices) {
                     try {
-                        EchoFrame frame = sensor.get().reqGetOperationStatus().reqGetMeasuredValueOfRelativeHumidity().send();
+                        EchoFrame frame = sensor.get().reqGetMeasuredValueOfRelativeHumidity().send();
                         pending.add(new Package(sensor, frame));
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -70,7 +70,7 @@ public class HumidityProcess extends AbstractProcess<HumiditySensor>{
 
                 String previousValue = storage.get(ipAddress, instanceCode, epc);
                 if(!previousValue.equals(currentValue)) {
-                    changedValue(ipAddress, instanceCode, epc);
+//                    changedValue(ipAddress, instanceCode, epc);
                     storage.put(eoj.getNode().getAddressStr(), Byte.toString(eoj.getInstanceCode()),epc,currentValue);
                 }
             }

@@ -1,9 +1,11 @@
 package nghviet.hgw;
 
+import com.google.gson.Gson;
 import nghviet.hgw.anomaly.Anomaly;
 import nghviet.hgw.controller.EchonetLiteController;
 import nghviet.hgw.mqtt.MqttHandler;
 import nghviet.hgw.security.SecurityHandler;
+import nghviet.hgw.threading.AnomalySignal;
 import nghviet.hgw.threading.LoginSignal;
 import nghviet.hgw.utility.JWT;
 import nghviet.hgw.utility.LoggerHandler;
@@ -11,7 +13,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 @SpringBootApplication
 public class MainApplication {
@@ -26,29 +30,40 @@ public class MainApplication {
 			LoginSignal.getInstance().doWait();
 		}
 		System.out.println("System start");
-		System.out.println(JWT.isAvailable());
 		ScheduledThreadPoolExecutor threadPool = new ScheduledThreadPoolExecutor(4);
 		SecurityHandler.getInstance();
 		MqttHandler.getInstance();
 		LoggerHandler.getInstance();
+		long startTime = System.nanoTime();
+		MqttHandler.getInstance().enqueue("request/mining","");
+		AnomalySignal.getInstance().doWait();
+		long endTime = System.nanoTime();
+		Date myTime = new Date((endTime - startTime) / 1000);
+		LoggerHandler.getInstance().info("Association rules takes :" + ((endTime - startTime) / (Math.pow(10,9) * 60)) + " min");
 		Anomaly.getInstance();
+		Gson gson = new Gson();
+		threadPool.scheduleAtFixedRate(new Runnable() {
+			@Override
+			public void run() {
+				long startTime = System.nanoTime();
+				ArrayList<String> result = Anomaly.getInstance().run();
+				long endTime   = System.nanoTime();
+				LoggerHandler.getInstance().info("Anomaly detection run in : " + (endTime - startTime) + " ns");
+				if(!result.isEmpty()) {
+					LoggerHandler.getInstance().warn("Result ---------------------");
+					for(String r:result) LoggerHandler.getInstance().warn(r);
+					try {
+						MqttHandler.getInstance().enqueue("warning", gson.toJson(result));
+					} catch (Exception e) {
+						LoggerHandler.getInstance().warn(e.toString());
+					}
+					LoggerHandler.getInstance().warn("---------------------");
+				}
 
-		ArrayList<String> testData = new ArrayList<>();
-		testData.add("micromotion/f4-5c-89-92-6c-8d/14_ON");
-		testData.add("illuminance/f4-5c-89-92-6c-8d/15_4");
-		testData.add("illuminance/f4-5c-89-92-6c-8d/14_6");
-		testData.add("micromotion/f4-5c-89-92-6c-8d/9_ON");
-		testData.add("micromotion/f4-5c-89-92-6c-8d/15_ON");
-		testData.add("illuminance/f4-5c-89-92-6c-8d/11_2");
-		testData.add("illuminance/f4-5c-89-92-6c-8d/12_3");
-		testData.add("micromotion/f4-5c-89-92-6c-8d/11_ON");
-		testData.add("illuminance/f4-5c-89-92-6c-8d/9_2");
+			}
+		}, 2,2, TimeUnit.MINUTES);
 
-		ArrayList<String> result = Anomaly.getInstance().anomalyDetection(testData);
-		System.out.println("Anomaly detection result");
-		for(String r : result) System.out.println(r);
-//		MqttHandler.getInstance().enqueue("request/mining","");
-//		EchonetLiteController controller = new EchonetLiteController(threadPool);
+		EchonetLiteController controller = new EchonetLiteController(threadPool);
 	}
 
 }

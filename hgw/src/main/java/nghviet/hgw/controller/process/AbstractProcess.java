@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.sonycsl.echo.EchoFrame;
 import com.sonycsl.echo.eoj.EchoObject;
 import com.sonycsl.echo.eoj.device.DeviceObject;
+import nghviet.hgw.anomaly.Anomaly;
 import nghviet.hgw.mqtt.MqttHandler;
 import nghviet.hgw.utility.MACAddress;
 
@@ -40,7 +41,7 @@ public abstract class AbstractProcess<T extends EchoObject> {
     protected String topic = null;
 
     protected static class CentralStorage {
-        ConcurrentHashMap<String , ConcurrentHashMap<String,String>> values = new ConcurrentHashMap<>();
+        ConcurrentHashMap<String , String> values = new ConcurrentHashMap<>();
 
         public void clear() {
             values.clear();
@@ -54,8 +55,8 @@ public abstract class AbstractProcess<T extends EchoObject> {
             }
             String key = MACAddress.getInstance().getMACAddress(ipAddress) + "/" + instanceCode;
 //            System.out.println("PUT " + key + " " + instanceCode + " " + epc + " " + value);
-            if(!values.containsKey(key)) values.put(key, new ConcurrentHashMap<String, String>());
-            values.get(key).put(epc, value);
+//            if(!values.containsKey(key)) values.put(key, new ConcurrentHashMap<String, String>());
+            values.put(key, value);
         }
 
         public synchronized String get(String ipAddress, String instanceCode, String epc) {
@@ -67,8 +68,9 @@ public abstract class AbstractProcess<T extends EchoObject> {
                 }
                 String key = MACAddress.getInstance().getMACAddress(ipAddress) + "/" + instanceCode;
 //                System.out.println("GET " + key + " " + instanceCode + " " + epc + " " + values.get(key).get(epc));
-                return values.get(key).get(epc);
+                return values.get(key);
             } catch(Exception ex) {
+                ex.printStackTrace();
                 return "";
             }
         }
@@ -147,6 +149,10 @@ public abstract class AbstractProcess<T extends EchoObject> {
         }
     }
 
+    private void pushToStorage() {
+
+    }
+
     protected boolean send() {
 
         if(topic == null) return false;
@@ -154,13 +160,13 @@ public abstract class AbstractProcess<T extends EchoObject> {
         StringBuilder message = new StringBuilder();
         Date date = new Date();
         message.append("{\n");
-
+        for(DeviceKeyEpc key: changed) {
+            Anomaly.getInstance().addState(date.getTime(), key.ipAddress, topic, key.instanceCode, storage.get(key.ipAddress, key.instanceCode,key.epc));
+        }
         message.append("\t" + '"' + "value" +'"' + " : ").append(generateMessage()).append(",\n");
 //        System.out.println(generateMessage());
         message.append("\t").append('"').append("timestamp").append('"').append(" : ").append(date.getTime()).append("\n");
         message.append("}");
-
-        System.out.println(message);
 
         return false;
 

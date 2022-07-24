@@ -1,6 +1,9 @@
 package nghviet.hgw.mqtt;
 
+import nghviet.hgw.anomaly.Anomaly;
 import nghviet.hgw.security.SecurityHandler;
+import nghviet.hgw.threading.AnomalySignal;
+import nghviet.hgw.threading.LoginSignal;
 import org.eclipse.paho.client.mqttv3.*;
 
 import javax.net.ssl.KeyManagerFactory;
@@ -75,6 +78,10 @@ public class MqttHandler {
         @Override
         public void messageArrived(String topic, MqttMessage message) throws Exception {
             System.out.println(topic + " : " + message);
+            if(topic.equals(instance.id + "/response/mining")) {
+                Anomaly.getInstance();
+                AnomalySignal.getInstance().doNotify();
+            }
         }
 
         @Override
@@ -148,12 +155,9 @@ public class MqttHandler {
             client = null;
             return;
         }
-
-        System.out.println(token.getUserContext());
-        client.subscribe(id + "/#", (topic, msc) -> {
-            System.out.println(topic + " " + msc);
-        });
         client.setCallback(callback);
+        System.out.println(token.getUserContext());
+        client.subscribe(id + "/response/#");
         queue = new LinkedBlockingQueue<>();
         System.out.println("Client ID : " + client.getClientId());
 
