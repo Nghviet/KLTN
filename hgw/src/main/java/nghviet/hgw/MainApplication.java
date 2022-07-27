@@ -9,6 +9,7 @@ import nghviet.hgw.threading.AnomalySignal;
 import nghviet.hgw.threading.LoginSignal;
 import nghviet.hgw.utility.JWT;
 import nghviet.hgw.utility.LoggerHandler;
+import nghviet.hgw.utility.MACAddress;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -33,14 +34,10 @@ public class MainApplication {
 		ScheduledThreadPoolExecutor threadPool = new ScheduledThreadPoolExecutor(4);
 		SecurityHandler.getInstance();
 		MqttHandler.getInstance();
+		MACAddress.getInstance().update();
 		LoggerHandler.getInstance();
-		long startTime = System.nanoTime();
 		MqttHandler.getInstance().enqueue("request/mining","");
-		AnomalySignal.getInstance().doWait();
-		long endTime = System.nanoTime();
-		Date myTime = new Date((endTime - startTime) / 1000);
-		LoggerHandler.getInstance().info("Association rules takes :" + ((endTime - startTime) / (Math.pow(10,9) * 60)) + " min");
-		Anomaly.getInstance();
+		Anomaly.getInstance().init();
 		Gson gson = new Gson();
 		threadPool.scheduleAtFixedRate(new Runnable() {
 			@Override
@@ -49,7 +46,7 @@ public class MainApplication {
 				ArrayList<String> result = Anomaly.getInstance().run();
 				long endTime   = System.nanoTime();
 				LoggerHandler.getInstance().info("Anomaly detection run in : " + (endTime - startTime) + " ns");
-				if(!result.isEmpty()) {
+				if(result != null && !result.isEmpty()) {
 					LoggerHandler.getInstance().warn("Result ---------------------");
 					for(String r:result) LoggerHandler.getInstance().warn(r);
 					try {

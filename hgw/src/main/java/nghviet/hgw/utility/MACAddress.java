@@ -5,6 +5,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MACAddress {
@@ -46,17 +47,10 @@ public class MACAddress {
 
             String line;
             while ((line = reader.readLine()) != null) {
-                String[] temp = line.split(" ");
-                ArrayList<String> splited = new ArrayList<>();
-                for(int i=0;i< temp.length;i++) if(temp[i].length() != 0) splited.add(temp[i]);
-
-                if(splited.size() >= 2) {
-                    if(splited.get(0).matches("^((25[0-5]|(2[0-4]|1\\d|[1-9]|)\\d)(\\.(?!$)|$)){4}$")) {
-//                        System.out.println(splited.get(0) + " " + splited.get(1));
-                        setIP(splited.get(0), splited.get(1));
-                    }
+                Matcher matcher = ip_verification.matcher(line);
+                if(matcher.matches()) {
+                    setIP(matcher.toMatchResult().group(1), matcher.toMatchResult().group(2).replace(":","-"));
                 }
-
             }
         } catch(Exception ex) {
             ex.printStackTrace();

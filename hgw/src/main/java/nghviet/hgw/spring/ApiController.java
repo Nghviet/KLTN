@@ -1,10 +1,14 @@
 package nghviet.hgw.spring;
 
+import nghviet.hgw.anomaly.Anomaly;
 import org.springframework.web.bind.annotation.*;
 import nghviet.hgw.utility.JWT;
 import nghviet.hgw.spring.form.*;
 
 import nghviet.hgw.threading.LoginSignal;
+
+import java.util.ArrayList;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api")
@@ -26,5 +30,11 @@ public class ApiController {
             return "Login complete";
         }
         throw new IllegalAccessException("Invalid user");
+    }
+
+    @GetMapping
+    @RequestMapping(value = "/anomaly")
+    public Set<String> anomalyDevice() {
+        return null;
     }
 }

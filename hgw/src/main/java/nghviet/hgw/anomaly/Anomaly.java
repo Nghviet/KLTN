@@ -13,6 +13,8 @@ import java.util.HashMap;
 
 public class Anomaly {
     final float INF = 1000000007;
+
+    private Boolean modelLoaded = false;
     private static Anomaly instance = null;
     public static Anomaly getInstance() {
         if(instance == null) instance = new Anomaly();
@@ -85,7 +87,12 @@ public class Anomaly {
             return 5;
         }
     }
-    private Anomaly() {
+
+
+
+    public void init() {
+        if(modelLoaded) return;
+
         ArrayList<String> discrete, state, device;
         File file = new File("model/discrete.csv");
         if(!file.exists()) {
@@ -122,6 +129,7 @@ public class Anomaly {
             discreteValue.put(cell[0], new Discrete(max_value_1, max_value_2, max_value_3, max_value_4));
         }
         LoggerHandler.getInstance().info("Discrete value extract complete with : " + discreteValue.size());
+        modelLoaded = true;
     }
 
     public ArrayList<String> anomalyDetection(ArrayList<String> inputStates) {
@@ -194,28 +202,48 @@ public class Anomaly {
     }
 
     public ArrayList<String> run() {
+        if(!modelLoaded) return null;
         synchronized (states) {
             if(states.size() == 0) return null;
-            ArrayList<String> picked = new ArrayList<>();
-            HashMap<String, Integer> available = new HashMap<>();
+
+
+            ArrayList<String> result = new ArrayList<>();
+            HashMap<String ,Boolean> a = new HashMap<>();
+
             while(states.size() > 0 && states.get(0).timestamp <= start + 2 * 60 * 1000) {
-                State state = states.get(0);
-                if(!available.containsKey(state.device)) available.put(state.device, state.label);
-                else available.put(state.device, Math.max(state.label, available.get(state.device)));
-                states.remove(0);
+                    ArrayList<String> picked = new ArrayList<>();
+                    HashMap<String, Integer> available = new HashMap<>();
+
+                    while(states.size() > 0 && states.get(0).timestamp <= start + 2 * 60 * 1000) {
+
+                        State state = states.get(0);
+                        if(!available.containsKey(state.device)) available.put(state.device, state.label);
+                        else available.put(state.device, Math.max(state.label, available.get(state.device)));
+                        states.remove(0);
+                    }
+
+                    for(String device: available.keySet()) {
+                        int label = available.get(device);
+                        String l = "";
+                        if(label < 0) l = "ON";
+                        if(label >= 0) l = "" + label;
+                        picked.add(device+"_"+l);
+                    }
+
+                    ArrayList<String> anomalyStates = anomalyDetection(picked);
+                    for(String state : anomalyStates) {
+                        System.out.println(state);
+                        String device = state.split("_")[0];
+                        if(!a.containsKey(device)) {
+                            a.put(device, true);
+                            result.add(device);
+                        }
+                    }
+
+                    start += 2 * 60 * 1000;
             }
 
-            for(String device: available.keySet()) {
-                int label = available.get(device);
-                String l = "";
-                if(label == -2) l = "OFF";
-                if(label == -1) l = "ON";
-                if(label >= 0) l = "" + label;
-                picked.add(device+"_"+l);
-            }
-
-            start += 2 * 60 * 1000;
-            return anomalyDetection(picked);
+            return result;
         }
     }
 }

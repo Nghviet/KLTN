@@ -1,5 +1,8 @@
 package nghviet.hgw.threading;
 
+import com.sonycsl.echo.Echo;
+import nghviet.hgw.utility.LoggerHandler;
+
 public class AnomalySignal {
     private static final AnomalySignal instance = new AnomalySignal();
 
@@ -8,6 +11,7 @@ public class AnomalySignal {
     private boolean signalled = false;
 
     public void doWait() {
+        LoggerHandler.getInstance().info("Waiting anomaly reply");
         synchronized (instance) {
             while(!signalled) {
                 try {

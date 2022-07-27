@@ -12,7 +12,7 @@ import axios from 'axios'
 
 function App() {
 
-  let [hgwState, setHgwState] = React.useState(undefined)
+  let [hgwState, setHgwState] = React.useState(true)
   console.log(hgwState)
   if(hgwState == undefined) return(
     <div>

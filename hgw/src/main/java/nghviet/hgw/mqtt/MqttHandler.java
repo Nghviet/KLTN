@@ -4,6 +4,7 @@ import nghviet.hgw.anomaly.Anomaly;
 import nghviet.hgw.security.SecurityHandler;
 import nghviet.hgw.threading.AnomalySignal;
 import nghviet.hgw.threading.LoginSignal;
+import nghviet.hgw.utility.LoggerHandler;
 import org.eclipse.paho.client.mqttv3.*;
 
 import javax.net.ssl.KeyManagerFactory;
@@ -79,7 +80,8 @@ public class MqttHandler {
         public void messageArrived(String topic, MqttMessage message) throws Exception {
             System.out.println(topic + " : " + message);
             if(topic.equals(instance.id + "/response/mining")) {
-                Anomaly.getInstance();
+                LoggerHandler.getInstance().info(topic + " : " + message);
+                Anomaly.getInstance().init();
                 AnomalySignal.getInstance().doNotify();
             }
         }

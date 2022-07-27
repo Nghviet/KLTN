@@ -75,6 +75,7 @@ public class EchonetLiteController {
                 @Override
                 public void onNewMicromotionSensor(MicromotionSensor device) {
                     super.onNewMicromotionSensor(device);
+                    LoggerHandler.getInstance().info("On new Micromotion Sensor at " + device.getNode().getAddressStr());
                     micromotionProcess.addDevice(device);
                 }
 
